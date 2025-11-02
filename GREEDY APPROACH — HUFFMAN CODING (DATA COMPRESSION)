@@ -1,0 +1,106 @@
+#include <iostream>
+#include <queue>
+#include <unordered_map>
+#include <string>
+using namespace std;
+
+// Node structure for Huffman Tree
+struct Node {
+    char ch;
+    int freq;
+    Node *left, *right;
+    
+    Node(char c, int f) {
+        ch = c;
+        freq = f;
+        left = right = nullptr;
+    }
+};
+
+// Compare structure for min-heap
+struct compare {
+    bool operator()(Node* l, Node* r) {
+        return l->freq > r->freq;
+    }
+};
+
+// Function to print Huffman Codes
+void printCodes(Node* root, string str, unordered_map<char, string> &huffmanCode) {
+    if (!root)
+        return;
+
+    // Found a leaf node
+    if (!root->left && !root->right) {
+        huffmanCode[root->ch] = str;
+    }
+
+    printCodes(root->left, str + "0", huffmanCode);
+    printCodes(root->right, str + "1", huffmanCode);
+}
+
+// Build Huffman Tree and generate codes
+void HuffmanCoding(string text) {
+    unordered_map<char, int> freq;
+
+    // Count frequency of each character
+    for (char ch : text) {
+        freq[ch]++;
+    }
+
+    // Priority queue (min-heap)
+    priority_queue<Node*, vector<Node*>, compare> pq;
+
+    // Create leaf nodes and push to queue
+    for (auto pair : freq) {
+        pq.push(new Node(pair.first, pair.second));
+    }
+
+    // Build Huffman Tree
+    while (pq.size() != 1) {
+        Node *left = pq.top(); pq.pop();
+        Node *right = pq.top(); pq.pop();
+
+        Node *newNode = new Node('\0', left->freq + right->freq);
+        newNode->left = left;
+        newNode->right = right;
+
+        pq.push(newNode);
+    }
+
+    Node *root = pq.top();
+
+    unordered_map<char, string> huffmanCode;
+    printCodes(root, "", huffmanCode);
+
+    cout << "\nHuffman Codes:\n";
+    for (auto pair : huffmanCode) {
+        cout << pair.first << " : " << pair.second << endl;
+    }
+
+    cout << "\nOriginal Text: " << text << endl;
+
+    string encodedText = "";
+    for (char ch : text) {
+        encodedText += huffmanCode[ch];
+    }
+
+    cout << "\nEncoded Text: " << encodedText << endl;
+
+    int originalBits = text.length() * 8;
+    int compressedBits = encodedText.length();
+
+    cout << "\nOriginal size: " << originalBits << " bits";
+    cout << "\nCompressed size: " << compressedBits << " bits";
+    cout << "\nCompression Ratio: " << (float)compressedBits / originalBits * 100 << "%\n";
+}
+
+// Main Function
+int main() {
+    string text;
+    cout << "Enter text to compress: ";
+    getline(cin, text);
+
+    HuffmanCoding(text);
+
+    return 0;
+}
